@@ -1,12 +1,16 @@
 import { View, StyleSheet, Button, Text, TextInput } from "react-native";
 import { Icon } from "react-native-elements/dist/icons/Icon";
 import React from "react";
-// https://dribbble.com/shots/10991972-Covid-19#
-export default function App({ navigation }) {
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+export default function App({ navigation, setUserKey, userKey }) {
   function changePage(location) {
     navigation.navigate(location);
   }
-
+  function logout() {
+    AsyncStorage.removeItem("authorization");
+    setUserKey(null);
+  }
   React.useEffect(() => {
     navigation.setOptions({
       headerRight: (p) => (
@@ -22,16 +26,14 @@ export default function App({ navigation }) {
       ),
     });
   }, []);
-
   return (
     <View style={styles.container}>
-      <Text style={styles.titleText}>Hello!</Text>
-      <Text style={styles.subText}>
-        Are you ready to start using your first Smart Helmet!
-      </Text>
-      <Text>Continue this later</Text>
-      <TextInput />
-      <Button onPress={() => changePage("Login")} title="Go to next page" />
+      <Text>Loged {!!userKey ? "In" : "Out"}</Text>
+      {userKey ? (
+        <Button onPress={() => logout()} title="Logout" />
+      ) : (
+        <Button onPress={() => changePage("Login")} title="Go to login" />
+      )}
     </View>
   );
 }

@@ -1,7 +1,6 @@
 import * as React from "react";
 import MapView from "react-native-maps";
 import { Icon } from "react-native-elements/dist/icons/Icon";
-
 import {
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import {
   Pressable,
   TextInput,
 } from "react-native";
+import { getHelmet } from "../utils/api";
 
 const helmetId = "9hjk";
 
@@ -40,18 +40,7 @@ export default function App({ navigation }) {
   }, []);
 
   React.useEffect(() => {
-    fetch("http://shelmet.herokuapp.com/api/helmet/get", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: helmetId,
-      }),
-      mode: "cors",
-    })
-      .then((r) => r.json())
+    getHelmet(helmetId)
       .then(({ helmet }) => {
         helmet.lastLocation.lat = parseFloat(helmet.lastLocation.lat);
         helmet.lastLocation.lng = parseFloat(helmet.lastLocation.lng);
