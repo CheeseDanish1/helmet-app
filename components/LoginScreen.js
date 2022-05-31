@@ -1,5 +1,4 @@
 import { StyleSheet, Dimensions } from "react-native";
-import Interactive from "react-native-text-input-interactive";
 import {
   Image,
   View,
@@ -10,6 +9,7 @@ import {
   SafeAreaView,
   StatusBar,
 } from "react-native";
+import React from "react";
 const ScreenWidth = Dimensions.get("screen").width;
 
 const LoginScreen_style_1 = {
@@ -92,8 +92,6 @@ const LoginScreen_style_1 = {
 };
 
 const tslib_1 = require("tslib");
-const React = (0, tslib_1.__importStar)(require("react"));
-const react_native_1 = require("react-native");
 const react_native_text_input_interactive_1 = (0, tslib_1.__importDefault)(
   require("react-native-text-input-interactive")
 );

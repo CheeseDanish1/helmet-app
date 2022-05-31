@@ -30,9 +30,12 @@ export default function App({ navigation, setUserKey, userKey }) {
     <View style={styles.container}>
       <Text>Loged {!!userKey ? "In" : "Out"}</Text>
       {userKey ? (
-        <Button onPress={() => logout()} title="Logout" />
+        <Button onPress={() => logout()} title="Log out" />
       ) : (
-        <Button onPress={() => changePage("Login")} title="Go to login" />
+        <View>
+          <Button onPress={() => changePage("Login")} title="Log in" />
+          <Button onPress={() => changePage("Signup")} title="Sign up" />
+        </View>
       )}
     </View>
   );

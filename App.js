@@ -1,9 +1,16 @@
 import * as React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { HomePage, About, Manage, Login, Loading } from "./pages/";
+import {
+  HomePage,
+  About,
+  Manage,
+  Login,
+  Loading,
+  Signup,
+  Menu,
+} from "./pages/";
 import { Icon } from "react-native-elements/dist/icons/Icon";
-import Menu from "./components/Menu";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Stack = createNativeStackNavigator();
@@ -14,6 +21,7 @@ const Stack = createNativeStackNavigator();
 function App() {
   const [userKey, setUserKey] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+
   AsyncStorage.getItem("authorization").then((r) => {
     setUserKey(r || null);
     setLoading(false);
@@ -57,12 +65,17 @@ function App() {
         {/* <Stack.Screen name="Home" component={HomePage} options={header} /> */}
         <Stack.Screen name="Menu" component={Menu} options={header} />
         <Stack.Screen name="About" component={About} options={header} />
-        <Stack.Screen name="Manage" component={Manage} options={header} />
+        <Stack.Screen name="Manage" options={header}>
+          {(props) => <Manage {...props} text="Manage" userKey={userKey} />}
+        </Stack.Screen>
         <Stack.Screen name="Login" options={header}>
+          {(props) => <Login {...props} text="Login" setUserKey={setUserKey} />}
+        </Stack.Screen>
+        <Stack.Screen name="Signup" options={header}>
           {(props) => (
-            <Login
+            <Signup
               {...props}
-              text="Login"
+              text="Signup"
               setUserKey={setUserKey}
               userKey={userKey}
             />

@@ -11,21 +11,31 @@ import {
   Pressable,
   TextInput,
 } from "react-native";
-import { getHelmet } from "../utils/api";
+import { getUser } from "../utils/api";
+import BottomSheet from "@gorhom/bottom-sheet";
 
-const helmetId = "9hjk";
-
-// Get Helmet info from Id
-
-export default function App({ navigation }) {
+export default function App({ navigation, userKey }) {
   // const [location, setLocation] = React.useState();
   const [loading, setLoading] = React.useState(true);
   const [settings, showSettings] = React.useState(false);
-  const [helmet, setHelmet] = React.useState(null);
+  const [user, setUser] = React.useState(null);
+
+  // Helmets will be in an array
+  // This is the position of the helmet being shown
+  // By default it shows the first one
+  const [helmetPosition, setHelmetPosition] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!userKey) return navigation.goBack();
+    getUser(userKey).then((r) => {
+      setUser(r.user);
+      setLoading(false);
+    });
+  }, [userKey]);
 
   React.useEffect(() => {
     navigation.setOptions({
-      headerRight: (p) => (
+      headerRight: () => (
         <Icon
           name="menu"
           style={{ marginRight: 10 }}
@@ -39,28 +49,31 @@ export default function App({ navigation }) {
     });
   }, []);
 
-  React.useEffect(() => {
-    getHelmet(helmetId)
-      .then(({ helmet }) => {
-        helmet.lastLocation.lat = parseFloat(helmet.lastLocation.lat);
-        helmet.lastLocation.lng = parseFloat(helmet.lastLocation.lng);
-        setHelmet(helmet);
-        setLoading(false);
-      })
-      .catch(console.log);
+  const bottomSheetRef = React.useRef < BottomSheet > null;
+
+  // variables
+  const snapPoints = React.useMemo(() => ["25%", "50%"], []);
+
+  // callbacks
+  const handleSheetChanges = React.useCallback((index) => {
+    console.log("handleSheetChanges", index);
   }, []);
 
-  if (loading) return <Text>Loading</Text>;
+  if (loading || !user) return <Text>Loading or error</Text>;
+
+  if (!user?.helmets || user?.helmets?.length <= 0)
+    return <Text>No helmets, add functionality later</Text>;
+
+  const helmet = user?.helmets[helmetPosition] || [];
 
   // Add animations
-
   return (
     <View>
       <View style={styles.container}>
         <MapView
           initialRegion={{
-            latitude: helmet.lastLocation.lat,
-            longitude: helmet.lastLocation.lng,
+            latitude: parseFloat(helmet.lastLocation.lat),
+            longitude: parseFloat(helmet.lastLocation.lng),
             latitudeDelta: 0.001,
             longitudeDelta: 0.001,
           }}
@@ -68,8 +81,8 @@ export default function App({ navigation }) {
         >
           <MapView.Marker
             coordinate={{
-              latitude: helmet.lastLocation.lat,
-              longitude: helmet.lastLocation.lng,
+              latitude: parseFloat(helmet.lastLocation.lat),
+              longitude: parseFloat(helmet.lastLocation.lng),
             }}
             title="Helmet"
             description="This is the current location of your helmet"
@@ -85,7 +98,17 @@ export default function App({ navigation }) {
           <Icon size={32} name="settings" />
         </TouchableOpacity>
       </View>
-      <Modal
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={1}
+        snapPoints={snapPoints}
+        onChange={handleSheetChanges}
+      >
+        <View style={styles.contentContainer}>
+          <Text>Awesome 🎉</Text>
+        </View>
+      </BottomSheet>
+      {/* <Modal
         animationType="slide"
         transparent={true}
         visible={settings}
@@ -106,7 +129,7 @@ export default function App({ navigation }) {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      </Modal> */}
     </View>
   );
 }
