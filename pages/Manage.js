@@ -1,5 +1,5 @@
 import * as React from "react";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { Icon } from "react-native-elements/dist/icons/Icon";
 import {
   StyleSheet,
@@ -15,15 +15,13 @@ import { getUser } from "../utils/api";
 import BottomSheet from "@gorhom/bottom-sheet";
 
 export default function App({ navigation, userKey }) {
-  // const [location, setLocation] = React.useState();
   const [loading, setLoading] = React.useState(true);
-  const [settings, showSettings] = React.useState(false);
   const [user, setUser] = React.useState(null);
 
   // Helmets will be in an array
   // This is the position of the helmet being shown
   // By default it shows the first one
-  const [helmetPosition, setHelmetPosition] = React.useState(0);
+  const [helmetPosition, setHelmetPosition] = React.useState(1);
 
   React.useEffect(() => {
     if (!userKey) return navigation.goBack();
@@ -49,15 +47,8 @@ export default function App({ navigation, userKey }) {
     });
   }, []);
 
-  const bottomSheetRef = React.useRef < BottomSheet > null;
-
-  // variables
-  const snapPoints = React.useMemo(() => ["25%", "50%"], []);
-
-  // callbacks
-  const handleSheetChanges = React.useCallback((index) => {
-    console.log("handleSheetChanges", index);
-  }, []);
+  const bottomSheetRef = React.useRef(null);
+  const snapPoints = React.useMemo(() => ["25%", "50%", "100%"], []);
 
   if (loading || !user) return <Text>Loading or error</Text>;
 
@@ -68,7 +59,7 @@ export default function App({ navigation, userKey }) {
 
   // Add animations
   return (
-    <View>
+    <>
       <View style={styles.container}>
         <MapView
           initialRegion={{
@@ -79,58 +70,41 @@ export default function App({ navigation, userKey }) {
           }}
           style={styles.map}
         >
-          <MapView.Marker
+          <Marker
             coordinate={{
-              latitude: parseFloat(helmet.lastLocation.lat),
-              longitude: parseFloat(helmet.lastLocation.lng),
+              latitude: parseFloat(helmet.lastLocation.lat + 1),
+              longitude: parseFloat(helmet.lastLocation.lng + 1),
             }}
             title="Helmet"
             description="This is the current location of your helmet"
           />
         </MapView>
       </View>
-      <View style={styles.settingsIcon}>
-        <TouchableOpacity
-          onPress={() => {
-            showSettings((p) => !p);
-          }}
+      <View style={styles.container2}>
+        <BottomSheet
+          ref={bottomSheetRef}
+          index={2}
+          snapPoints={snapPoints}
+          enableOverDrag={false}
+          // containerHeight={150}
         >
-          <Icon size={32} name="settings" />
-        </TouchableOpacity>
-      </View>
-      <BottomSheet
-        ref={bottomSheetRef}
-        index={1}
-        snapPoints={snapPoints}
-        onChange={handleSheetChanges}
-      >
-        <View style={styles.contentContainer}>
-          <Text>Awesome 🎉</Text>
-        </View>
-      </BottomSheet>
-      {/* <Modal
-        animationType="slide"
-        transparent={true}
-        visible={settings}
-        onRequestClose={() => {
-          Alert.alert("Modal has been closed.");
-          showSettings(false);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>Helmet Name</Text>
-            <TextInput value={helmet.name} style={styles.input} />
-            <Pressable
-              style={[styles.button, styles.buttonClose]}
-              onPress={() => showSettings(!settings)}
+          <View style={styles.contentContainer}>
+            <View
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                // justifyContent: "space-between",
+                margin: 10,
+                alignItems: "center",
+              }}
             >
-              <Text style={styles.textStyle}>Finished</Text>
-            </Pressable>
+              <Text>Helmet Name</Text>
+              <TextInput style={styles.input} value={helmet.name} />
+            </View>
           </View>
-        </View>
-      </Modal> */}
-    </View>
+        </BottomSheet>
+      </View>
+    </>
   );
 }
 
@@ -139,7 +113,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    // justifyContent: "center",
   },
   map: {
     width: Dimensions.get("window").width,
@@ -152,6 +125,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 10,
     width: Dimensions.get("window").width / 2,
+    marginLeft: 30,
   },
   text: {
     fontSize: 20,
@@ -203,5 +177,14 @@ const styles = StyleSheet.create({
   modalText: {
     marginBottom: 15,
     textAlign: "center",
+  },
+  container2: {
+    flex: 1,
+    padding: 24,
+    maxHeight: 300,
+  },
+  contentContainer: {
+    flex: 1,
+    // alignItems: "center",
   },
 });

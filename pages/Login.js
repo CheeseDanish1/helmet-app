@@ -3,8 +3,24 @@ import { View, Alert } from "react-native";
 import { login } from "../utils/api";
 import LoginScreen from "../components/LoginScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Icon } from "react-native-elements";
 
 export default function Login({ navigation, setUserKey }) {
+  React.useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Icon
+          name="menu"
+          style={{ marginRight: 10 }}
+          size={36}
+          color="white"
+          onPress={() => {
+            navigation.navigate("Menu");
+          }}
+        />
+      ),
+    });
+  }, []);
   // Use state doesn't work don't know why
   let email = "";
   let password = "";
