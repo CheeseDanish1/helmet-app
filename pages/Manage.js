@@ -10,6 +10,8 @@ import {
   Modal,
   Pressable,
   TextInput,
+  ActionSheetIOS,
+  Alert,
 } from "react-native";
 import { getUser } from "../utils/api";
 import BottomSheet from "@gorhom/bottom-sheet";
@@ -21,7 +23,7 @@ export default function App({ navigation, userKey }) {
   // Helmets will be in an array
   // This is the position of the helmet being shown
   // By default it shows the first one
-  const [helmetPosition, setHelmetPosition] = React.useState(1);
+  const [helmetPosition, setHelmetPosition] = React.useState(0);
 
   React.useEffect(() => {
     if (!userKey) return navigation.goBack();
@@ -62,7 +64,13 @@ export default function App({ navigation, userKey }) {
     <>
       <View style={styles.container}>
         <MapView
-          initialRegion={{
+          // initialRegion={{
+          //   latitude: parseFloat(helmet.lastLocation.lat),
+          //   longitude: parseFloat(helmet.lastLocation.lng),
+          //   latitudeDelta: 0.001,
+          //   longitudeDelta: 0.001,
+          // }}
+          region={{
             latitude: parseFloat(helmet.lastLocation.lat),
             longitude: parseFloat(helmet.lastLocation.lng),
             latitudeDelta: 0.001,
@@ -80,13 +88,41 @@ export default function App({ navigation, userKey }) {
           />
         </MapView>
       </View>
+      <TouchableOpacity
+        style={styles.settingsIcon}
+        onPress={() => {
+          if (user.helmets.length == 1)
+            return Alert.alert("You have no other helmets to switch to");
+
+          let options = [
+            ...user.helmets.map((r) => r.name).filter((r) => r != helmet.name),
+            "Cancel",
+          ];
+          ActionSheetIOS.showActionSheetWithOptions(
+            {
+              options,
+              cancelButtonIndex: options.length - 1,
+            },
+            (buttonIndex) => {
+              if (buttonIndex == options.length - 1) return;
+
+              const thisHelmet = user.helmets.find(
+                (h) => h.name == options[buttonIndex]
+              );
+              const index = user.helmets.indexOf(thisHelmet);
+              setHelmetPosition(index);
+            }
+          );
+        }}
+      >
+        <Icon size={32} name="settings" />
+      </TouchableOpacity>
       <View style={styles.container2}>
         <BottomSheet
           ref={bottomSheetRef}
           index={2}
           snapPoints={snapPoints}
           enableOverDrag={false}
-          // containerHeight={150}
         >
           <View style={styles.contentContainer}>
             <View
