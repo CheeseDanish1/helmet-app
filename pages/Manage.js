@@ -7,13 +7,12 @@ import {
   View,
   Dimensions,
   TouchableOpacity,
-  Modal,
-  Pressable,
   TextInput,
   ActionSheetIOS,
   Alert,
 } from "react-native";
 import { getUser } from "../utils/api";
+import AddHelmet from "../components/AddHelmetModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 
 export default function App({ navigation, userKey }) {
@@ -24,6 +23,7 @@ export default function App({ navigation, userKey }) {
   // This is the position of the helmet being shown
   // By default it shows the first one
   const [helmetPosition, setHelmetPosition] = React.useState(0);
+  const [visible, setVisibilty] = React.useState(false);
 
   React.useEffect(() => {
     if (!userKey) return navigation.goBack();
@@ -52,26 +52,20 @@ export default function App({ navigation, userKey }) {
   const bottomSheetRef = React.useRef(null);
   const snapPoints = React.useMemo(() => ["25%", "50%", "100%"], []);
 
-  if (loading || !user) return <Text>Loading or error</Text>;
+  if (loading || !user) return <Text>Loading...</Text>;
 
   if (!user?.helmets || user?.helmets?.length <= 0)
     return <Text>No helmets, add functionality later</Text>;
 
   const helmet = user?.helmets[helmetPosition] || [];
 
-  // Add animations
   return (
     <>
       <View style={styles.container}>
         <MapView
-          // initialRegion={{
-          //   latitude: parseFloat(helmet.lastLocation.lat),
-          //   longitude: parseFloat(helmet.lastLocation.lng),
-          //   latitudeDelta: 0.001,
-          //   longitudeDelta: 0.001,
-          // }}
           region={{
-            latitude: parseFloat(helmet.lastLocation.lat),
+            // Move it up a little bit because the thing is on the bottom of the screen
+            latitude: parseFloat(helmet.lastLocation.lat - 0.0002),
             longitude: parseFloat(helmet.lastLocation.lng),
             latitudeDelta: 0.001,
             longitudeDelta: 0.001,
@@ -80,14 +74,19 @@ export default function App({ navigation, userKey }) {
         >
           <Marker
             coordinate={{
-              latitude: parseFloat(helmet.lastLocation.lat + 1),
-              longitude: parseFloat(helmet.lastLocation.lng + 1),
+              latitude: parseFloat(helmet.lastLocation.lat),
+              longitude: parseFloat(helmet.lastLocation.lng),
             }}
-            title="Helmet"
-            description="This is the current location of your helmet"
+            title={helmet.name}
+            description="This is the last known location of your helmet"
           />
         </MapView>
       </View>
+      <AddHelmet
+        helmets={user.helmets}
+        visible={visible}
+        setVisibilty={setVisibilty}
+      />
       <TouchableOpacity
         style={styles.settingsIcon}
         onPress={() => {
@@ -96,6 +95,7 @@ export default function App({ navigation, userKey }) {
 
           let options = [
             ...user.helmets.map((r) => r.name).filter((r) => r != helmet.name),
+            "Add Helmet",
             "Cancel",
           ];
           ActionSheetIOS.showActionSheetWithOptions(
@@ -104,8 +104,13 @@ export default function App({ navigation, userKey }) {
               cancelButtonIndex: options.length - 1,
             },
             (buttonIndex) => {
+              // Cancel Button
               if (buttonIndex == options.length - 1) return;
 
+              // Add Helmet button
+              if (buttonIndex == options.length - 2) return setVisibilty(true);
+
+              // Chose a helmet
               const thisHelmet = user.helmets.find(
                 (h) => h.name == options[buttonIndex]
               );
@@ -134,8 +139,7 @@ export default function App({ navigation, userKey }) {
                 alignItems: "center",
               }}
             >
-              <Text>Helmet Name</Text>
-              <TextInput style={styles.input} value={helmet.name} />
+              <Text>{JSON.stringify(helmet)}</Text>
             </View>
           </View>
         </BottomSheet>
