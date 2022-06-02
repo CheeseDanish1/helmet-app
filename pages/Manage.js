@@ -15,23 +15,53 @@ import { getUser } from "../utils/api";
 import AddHelmet from "../components/AddHelmetModal";
 import BottomSheet from "@gorhom/bottom-sheet";
 
-export default function App({ navigation, userKey }) {
+export default function App({ navigation, userKey, socket }) {
   const [loading, setLoading] = React.useState(true);
   const [user, setUser] = React.useState(null);
+  const [camera, setCamera] = React.useState(null);
 
   // Helmets will be in an array
   // This is the position of the helmet being shown
   // By default it shows the first one
   const [helmetPosition, setHelmetPosition] = React.useState(0);
   const [visible, setVisibilty] = React.useState(false);
-
+  const [test, setTest] = React.useState(null);
   React.useEffect(() => {
+    // Get user
+
     if (!userKey) return navigation.goBack();
     getUser(userKey).then((r) => {
       setUser(r.user);
+      const helmetInfo = r.user.helmets[0];
+      setCamera({
+        latitude: parseFloat(helmetInfo.lastLocation.lat - 0.0002),
+        longitude: parseFloat(helmetInfo.lastLocation.lng),
+      });
       setLoading(false);
     });
   }, [userKey]);
+
+  React.useEffect(() => {
+    // Update map when location changes
+
+    if (!socket || !user) return;
+    socket.on("update-location", (data) => {
+      let helmet1 = user?.helmets[helmetPosition];
+      if (!helmet1) return;
+      if (helmet1.id != data.id) return;
+      let helmet2 = helmet1;
+      helmet2.lastLocation.lat = data.lat;
+      helmet2.lastLocation.lng = data.lng;
+      helmet2.lastLocation.location = data.location;
+
+      let user1 = user;
+      user1.helmets[helmetPosition] = helmet2;
+      setUser(user1);
+      setTest((p) => !p);
+    });
+
+    return () => socket.off("update-location");
+  }, [socket, user, helmetPosition]);
 
   React.useEffect(() => {
     navigation.setOptions({
@@ -51,7 +81,6 @@ export default function App({ navigation, userKey }) {
 
   const bottomSheetRef = React.useRef(null);
   const snapPoints = React.useMemo(() => ["25%", "50%", "100%"], []);
-
   if (loading || !user) return <Text>Loading...</Text>;
 
   if (!user?.helmets || user?.helmets?.length <= 0)
@@ -63,23 +92,41 @@ export default function App({ navigation, userKey }) {
     <>
       <View style={styles.container}>
         <MapView
-          region={{
-            // Move it up a little bit because the thing is on the bottom of the screen
-            latitude: parseFloat(helmet.lastLocation.lat - 0.0002),
+          initialRegion={{
+            latitude: parseFloat(helmet.lastLocation.lat - 0.001),
             longitude: parseFloat(helmet.lastLocation.lng),
-            latitudeDelta: 0.001,
-            longitudeDelta: 0.001,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          }}
+          showsCompass={false}
+          camera={{
+            center: camera,
+            pitch: 0,
+            altitude: 10000,
           }}
           style={styles.map}
         >
-          <Marker
-            coordinate={{
-              latitude: parseFloat(helmet.lastLocation.lat),
-              longitude: parseFloat(helmet.lastLocation.lng),
-            }}
-            title={helmet.name}
-            description="This is the last known location of your helmet"
-          />
+          {user.helmets.map((helmet) => {
+            return (
+              <Marker
+                key={helmet.id}
+                coordinate={{
+                  latitude: parseFloat(helmet.lastLocation.lat),
+                  longitude: parseFloat(helmet.lastLocation.lng),
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                onPress={(e) => {
+                  setCamera({
+                    latitude: e.nativeEvent.coordinate.latitude - 0.01,
+                    longitude: e.nativeEvent.coordinate.longitude,
+                  });
+                }}
+                title={helmet.name}
+                description="This is the last known location of your helmet"
+              />
+            );
+          })}
         </MapView>
       </View>
       <AddHelmet

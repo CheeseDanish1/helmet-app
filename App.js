@@ -12,6 +12,7 @@ import {
 } from "./pages/";
 import { Icon } from "react-native-elements/dist/icons/Icon";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import getSocket from "./utils/getSocket";
 
 const Stack = createNativeStackNavigator();
 
@@ -21,6 +22,18 @@ const Stack = createNativeStackNavigator();
 function App() {
   const [userKey, setUserKey] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  const [socket, setSocket] = React.useState();
+
+  React.useEffect(() => {
+    setSocket(getSocket());
+  }, []);
+
+  React.useEffect(() => {
+    if (!socket || !socket.on) return;
+    socket.on("test", () => {
+      console.log("Test Successfull");
+    });
+  }, [socket]);
 
   AsyncStorage.getItem("authorization").then((r) => {
     setUserKey(r || null);
@@ -66,7 +79,14 @@ function App() {
         <Stack.Screen name="Menu" component={Menu} options={header} />
         <Stack.Screen name="About" component={About} options={header} />
         <Stack.Screen name="Manage" options={header}>
-          {(props) => <Manage {...props} text="Manage" userKey={userKey} />}
+          {(props) => (
+            <Manage
+              {...props}
+              text="Manage"
+              userKey={userKey}
+              socket={socket}
+            />
+          )}
         </Stack.Screen>
         <Stack.Screen name="Login" options={header}>
           {(props) => <Login {...props} text="Login" setUserKey={setUserKey} />}
