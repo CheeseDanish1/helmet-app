@@ -10,7 +10,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import { getHelmet } from "../utils/api";
+import { addHelmet, getHelmet } from "../utils/api";
 
 export default function AddHelmet({ visible, setVisibilty, helmets }) {
   if (!visible) return <></>;
@@ -46,7 +46,7 @@ function InsideModal({ helmets }) {
   const [idError, setIdError] = useState("");
 
   const ScreenWidth = Dimensions.get("screen").width;
-
+  console.log(step);
   if (step == 0) {
     return (
       <View>
@@ -93,15 +93,15 @@ function InsideModal({ helmets }) {
             if (!id) return;
             getHelmet(id).then(({ helmet }) => {
               if (!helmet) return setIdError("There is no helmet with this id");
-              if (helmets.find((u) => u.id == id)) {
-                console.log("You already have that helmet");
-                return setIdError(
-                  "You already have this helmet added to your account"
-                );
-              }
+              // if (helmets.find((u) => u.id == id)) {
+              //   console.log("You already have that helmet");
+              //   return setIdError(
+              //     "You already have this helmet added to your account"
+              //   );
+              // }
               // TODO: Error message when helmet is not found
               console.log("NZXT");
-              setName(helmet.name);
+              setName(helmet.name || "");
               setStep(1);
             });
           }}
@@ -113,7 +113,60 @@ function InsideModal({ helmets }) {
       </View>
     );
   } else if (step == 1) {
-    return <Text>Step 1</Text>;
+    return (
+      <View>
+        <Text>Helmet Name</Text>
+        <Text
+          style={{
+            fontSize: 12,
+            color: "#565656",
+            marginBottom: 10,
+            marginTop: 2,
+          }}
+        >
+          You get to choose this :)
+        </Text>
+
+        <TextInput
+          value={name}
+          onChangeText={(e) => {
+            if (!e) setName((p) => p.slice(0, -1));
+            else setName((p) => e);
+          }}
+          style={styles.input}
+        />
+        <TouchableOpacity
+          style={{
+            height: 40,
+            width: ScreenWidth / 2,
+            backgroundColor: "#25a9e2",
+            borderRadius: 8,
+            alignItems: "center",
+            justifyContent: "center",
+            alignSelf: "center",
+            marginTop: 10,
+            elevation: 5,
+            shadowRadius: 8,
+            shadowOpacity: 0.3,
+            shadowColor: "#166080",
+            shadowOffset: {
+              width: 0,
+              height: 3,
+            },
+          }}
+          onPress={() => {
+            if (!name) return;
+            addHelmet(id, name).then((data) => {
+              console.log(data);
+            });
+          }}
+        >
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+            Next
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
   } else if (step == 2) {
     return <Text>Step 2</Text>;
   }

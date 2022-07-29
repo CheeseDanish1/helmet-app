@@ -7,13 +7,14 @@ import {
   View,
   Dimensions,
   TouchableOpacity,
-  TextInput,
   ActionSheetIOS,
   Alert,
 } from "react-native";
 import { getUser } from "../utils/api";
 import AddHelmet from "../components/AddHelmetModal";
 import BottomSheet from "@gorhom/bottom-sheet";
+
+// curl -X POST -d 'id=abcdefu' -d 'code=password' -d 'lat=40.701290' -d 'lng=-75.322670'  http://shelmet.herokuapp.com/api/helmet/update-location
 
 export default function App({ navigation, userKey, socket }) {
   const [loading, setLoading] = React.useState(true);
@@ -26,17 +27,21 @@ export default function App({ navigation, userKey, socket }) {
   const [helmetPosition, setHelmetPosition] = React.useState(0);
   const [visible, setVisibilty] = React.useState(false);
   const [test, setTest] = React.useState(null);
+
   React.useEffect(() => {
     // Get user
 
     if (!userKey) return navigation.goBack();
     getUser(userKey).then((r) => {
+      console.log(r, userKey);
       setUser(r.user);
       const helmetInfo = r.user.helmets[0];
-      setCamera({
-        latitude: parseFloat(helmetInfo.lastLocation.lat - 0.0002),
-        longitude: parseFloat(helmetInfo.lastLocation.lng),
-      });
+      if (helmetInfo)
+        setCamera({
+          latitude: parseFloat(helmetInfo.lastLocation.lat - 0.0002),
+          longitude: parseFloat(helmetInfo.lastLocation.lng),
+        });
+
       setLoading(false);
     });
   }, [userKey]);
@@ -64,6 +69,8 @@ export default function App({ navigation, userKey, socket }) {
   }, [socket, user, helmetPosition]);
 
   React.useEffect(() => {
+    // Anoying thing to get the header working
+    // That I need to do every fucking time
     navigation.setOptions({
       headerRight: () => (
         <Icon
@@ -79,15 +86,16 @@ export default function App({ navigation, userKey, socket }) {
     });
   }, []);
 
+  // These are for the map
   const bottomSheetRef = React.useRef(null);
   const snapPoints = React.useMemo(() => ["25%", "50%", "100%"], []);
+
   if (loading || !user) return <Text>Loading...</Text>;
 
   if (!user?.helmets || user?.helmets?.length <= 0)
     return <Text>No helmets, add functionality later</Text>;
 
   const helmet = user?.helmets[helmetPosition] || [];
-
   return (
     <>
       <View style={styles.container}>
@@ -103,6 +111,8 @@ export default function App({ navigation, userKey, socket }) {
             center: camera,
             pitch: 0,
             altitude: 10000,
+            heading: 0,
+            zoom: 0,
           }}
           style={styles.map}
         >
